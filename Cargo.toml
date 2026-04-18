@@ -1,0 +1,7 @@
+[workspace]
+members = ["crates/a3-manifest", "crates/a3-runtime"]
+resolver = "2"
+
+[workspace.package]
+version = "0.0.1"
+edition = "2024"
