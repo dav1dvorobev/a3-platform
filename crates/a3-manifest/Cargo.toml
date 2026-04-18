@@ -1,6 +1,5 @@
 [package]
 name = "a3-manifest"
-edition = "2024"
 version.workspace = true
 edition.workspace = true
 
