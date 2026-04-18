@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/a3-manifest", "crates/a3-runtime"]
+members = ["crates/a3-manifest", "crates/a3-runtime", "crates/a3-tools"]
 resolver = "2"
 
 [workspace.package]
