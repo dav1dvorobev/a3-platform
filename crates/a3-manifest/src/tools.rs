@@ -1,11 +1,13 @@
-//!
+//! Tool definitions used by the `a3-manifest` manifest format.
 
 use std::collections::HashMap;
 
+/// Collection of tool definitions from the manifest.
 ///
-pub type Tools = Vec<(String, ToolDefinition)>;
+/// Each entry is a `tool_name: tool_definition`.
+pub type Tools = HashMap<String, ToolDefinition>;
 
-///
+/// Definition of a single tool entry in the manifest.
 #[derive(serde::Deserialize, Debug)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum ToolDefinition {
@@ -21,4 +23,64 @@ pub enum ToolDefinition {
 }
 
 #[cfg(test)]
-mod tests {}
+mod tests {
+    use super::ToolDefinition;
+
+    #[test]
+    fn deserializes_http_tool_definition_correctly() {
+        let definition: ToolDefinition = serde_json::from_str(
+            r#"{
+                "type": "http",
+                "url": "https://example.com",
+                "headers": {
+                    "Authorization": "Bearer <token>"
+                }
+            }"#,
+        )
+        .unwrap();
+        match definition {
+            ToolDefinition::Http { url, headers } => {
+                assert_eq!(url, "https://example.com");
+                assert_eq!(
+                    headers.unwrap().get("Authorization"),
+                    Some(&"Bearer <token>".to_string())
+                );
+            }
+            ToolDefinition::Stdio { .. } => panic!("expected http tool definition"),
+        }
+    }
+
+    #[test]
+    fn deserializes_stdio_tool_definition_correctly() {
+        let definition: ToolDefinition = serde_json::from_str(
+            r#"{
+                "type": "stdio",
+                "command": "docker",
+                "args": ["run", "-i", "--rm", "mcp/example"],
+                "env": {
+                    "ACCESS_TOKEN": "<TOKEN>"
+                }
+            }"#,
+        )
+        .unwrap();
+        match definition {
+            ToolDefinition::Stdio { command, args, env } => {
+                assert_eq!(command, "docker");
+                assert_eq!(
+                    args.unwrap(),
+                    vec![
+                        "run".to_string(),
+                        "-i".to_string(),
+                        "--rm".to_string(),
+                        "mcp/example".to_string()
+                    ]
+                );
+                assert_eq!(
+                    env.unwrap().get("ACCESS_TOKEN"),
+                    Some(&"<TOKEN>".to_string())
+                );
+            }
+            ToolDefinition::Http { .. } => panic!("expected stdio tool definition"),
+        }
+    }
+}
