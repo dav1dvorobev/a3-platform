@@ -42,8 +42,8 @@ mod tests {
             ToolDefinition::Http { url, headers } => {
                 assert_eq!(url, "https://example.com");
                 assert_eq!(
-                    headers.unwrap().get("Authorization"),
-                    Some(&"Bearer <token>".to_string())
+                    headers.unwrap().get("Authorization").map(String::as_str),
+                    Some("Bearer <token>")
                 );
             }
             ToolDefinition::Stdio { .. } => panic!("expected http tool definition"),
@@ -76,8 +76,8 @@ mod tests {
                     ]
                 );
                 assert_eq!(
-                    env.unwrap().get("ACCESS_TOKEN"),
-                    Some(&"<TOKEN>".to_string())
+                    env.unwrap().get("ACCESS_TOKEN").map(String::as_str),
+                    Some("<TOKEN>")
                 );
             }
             ToolDefinition::Http { .. } => panic!("expected stdio tool definition"),
