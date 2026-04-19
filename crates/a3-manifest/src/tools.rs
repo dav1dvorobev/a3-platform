@@ -1,4 +1,4 @@
-//! Tool definitions used by the `a3-manifest` manifest format.
+//! Tool definitions used by manifest.
 
 use std::collections::HashMap;
 
@@ -7,7 +7,7 @@ use std::collections::HashMap;
 /// Each entry is a `tool_name: tool_definition`.
 pub type Tools = HashMap<String, ToolDefinition>;
 
-/// Definition of a single tool entry in the manifest.
+/// A tool definition.
 #[derive(serde::Deserialize, Debug)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum ToolDefinition {

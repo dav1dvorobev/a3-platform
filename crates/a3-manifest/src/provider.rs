@@ -1,6 +1,5 @@
-//!
+//! Provider types supported by manifests.
 
-///
 #[derive(serde::Deserialize, Debug)]
 #[serde(rename_all = "lowercase")]
 #[allow(non_camel_case_types)]

@@ -1,4 +1,4 @@
-//! a3-manifest
+//! Support for loading and validating manifests.
 
 mod error;
 mod manifest;
