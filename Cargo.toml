@@ -9,3 +9,4 @@ edition = "2024"
 [workspace.dependencies]
 a3-manifest = { path = "crates/a3-manifest" }
 a3-runtime = { path = "crates/a3-runtime" }
+thiserror = "2.0.18"
