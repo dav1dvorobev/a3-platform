@@ -24,7 +24,7 @@ pub enum ToolDefinition {
 
 #[cfg(test)]
 mod tests {
-    use super::ToolDefinition;
+    use super::*;
 
     #[test]
     fn deserializes_http_tool_definition_correctly() {

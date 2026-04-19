@@ -39,8 +39,7 @@ impl Manifest {
 
 #[cfg(test)]
 mod tests {
-    use super::Manifest;
-    use crate::Provider;
+    use super::*;
     use std::{
         fs,
         path::PathBuf,
