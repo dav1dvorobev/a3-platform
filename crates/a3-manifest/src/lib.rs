@@ -1,4 +1,4 @@
-//! Support for loading and validating manifests.
+//! Support for loading and validating manifest.
 
 mod error;
 mod manifest;

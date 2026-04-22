@@ -7,7 +7,7 @@ use std::collections::HashMap;
 /// Each entry is a `tool_name: tool_definition`.
 pub type Tools = HashMap<String, ToolDefinition>;
 
-/// A tool definition.
+/// Tool definition.
 #[derive(serde::Deserialize, Debug)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum ToolDefinition {

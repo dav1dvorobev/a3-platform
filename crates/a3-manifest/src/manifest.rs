@@ -3,7 +3,7 @@
 use crate::{Provider, Tools};
 use std::{collections::HashMap, path::Path};
 
-/// A manifest definition.
+/// Manifest definition.
 #[derive(serde::Deserialize, Debug)]
 #[non_exhaustive]
 pub struct Manifest {
