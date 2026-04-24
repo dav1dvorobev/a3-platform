@@ -10,7 +10,6 @@ pub struct Manifest {
     pub name: String,
     pub provider: Provider,
     pub model: String,
-    pub env: Option<HashMap<String, String>>,
     pub description: String,
     pub instruction: String,
     pub tools: Option<HashMap<String, ToolDefinition>>,
@@ -54,10 +53,6 @@ mod tests {
             "name": "search",
             "provider": "openai",
             "model": "qwen2.5:1.5b",
-            "env": {
-                "OPENAI_BASE_URL": "http://localhost:11434/v1",
-                "OPENAI_API_KEY": "ollama"
-            },
             "description": "DuckDuckGo Searcher",
             "instruction": "Provide a concise summary results for topic using DuckDuckGo",
             "tools": {
@@ -78,15 +73,6 @@ mod tests {
         assert_eq!(manifest.name, "search");
         assert!(matches!(manifest.provider, Provider::OpenAI));
         assert_eq!(manifest.model, "qwen2.5:1.5b");
-        assert_eq!(
-            manifest
-                .env
-                .as_ref()
-                .unwrap()
-                .get("OPENAI_API_KEY")
-                .map(String::as_str),
-            Some("ollama")
-        );
         assert_eq!(manifest.description, "DuckDuckGo Searcher");
         assert_eq!(
             manifest.instruction,
