@@ -1,6 +1,6 @@
 [workspace]
-members = ["crates/a3-manifest", "crates/a3-runtime"]
-resolver = "2"
+members = ["crates/*"]
+resolver = "3"
 
 [workspace.package]
 version = "0.0.1"
@@ -10,3 +10,5 @@ edition = "2024"
 a3-manifest = { path = "crates/a3-manifest" }
 a3-runtime = { path = "crates/a3-runtime" }
 thiserror = "2.0.18"
+tracing = "0.1.44"
+tracing-subscriber = "0.3.23"
