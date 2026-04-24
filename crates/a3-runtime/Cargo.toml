@@ -4,3 +4,13 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
+a3-manifest.workspace = true
+rig-core = { version = "0.35.0", features = ["rmcp"] }
+rmcp = { version = "1.5.0", features = [
+    "client",
+    "transport-child-process",
+    "transport-streamable-http-client-reqwest",
+] }
+thiserror.workspace = true
+tokio = { version = "1.52.1", features = ["macros", "rt-multi-thread"] }
+tracing.workspace = true
