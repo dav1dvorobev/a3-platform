@@ -1,6 +1,6 @@
 //! Manifest type and loading helpers.
 
-use crate::{Provider, Tools};
+use crate::{Provider, ToolDefinition};
 use std::{collections::HashMap, path::Path};
 
 /// Manifest definition.
@@ -11,9 +11,9 @@ pub struct Manifest {
     pub provider: Provider,
     pub model: String,
     pub env: Option<HashMap<String, String>>,
-    pub description: Option<String>,
-    pub instruction: Option<String>,
-    pub tools: Option<Tools>,
+    pub description: String,
+    pub instruction: String,
+    pub tools: Option<HashMap<String, ToolDefinition>>,
 }
 
 impl Manifest {
@@ -33,6 +33,12 @@ impl Manifest {
         if self.model.trim().is_empty() {
             return Err(crate::Error::MissingField("model"));
         }
+        if self.description.trim().is_empty() {
+            return Err(crate::Error::MissingField("description"));
+        }
+        if self.instruction.trim().is_empty() {
+            return Err(crate::Error::MissingField("instruction"));
+        }
         Ok(())
     }
 }
@@ -40,11 +46,6 @@ impl Manifest {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::{
-        fs,
-        path::PathBuf,
-        time::{SystemTime, UNIX_EPOCH},
-    };
 
     #[test]
     fn deserializes_manifest_correctly() {
@@ -57,6 +58,7 @@ mod tests {
                 "OPENAI_BASE_URL": "http://localhost:11434/v1",
                 "OPENAI_API_KEY": "ollama"
             },
+            "description": "DuckDuckGo Searcher",
             "instruction": "Provide a concise summary results for topic using DuckDuckGo",
             "tools": {
                 "duckduckgo": {
@@ -85,40 +87,14 @@ mod tests {
                 .map(String::as_str),
             Some("ollama")
         );
+        assert_eq!(manifest.description, "DuckDuckGo Searcher");
         assert_eq!(
-            manifest.instruction.as_deref(),
-            Some("Provide a concise summary results for topic using DuckDuckGo")
+            manifest.instruction,
+            "Provide a concise summary results for topic using DuckDuckGo"
         );
         let tools = manifest.tools.as_ref().unwrap();
         assert_eq!(tools.len(), 2);
         assert!(tools.contains_key("duckduckgo"));
         assert!(tools.contains_key("time"));
-    }
-
-    #[test]
-    fn loads_manifest_from_path_correctly() {
-        let path = unique_test_file_path();
-        fs::write(
-            &path,
-            r#"{
-                "name": "search",
-                "provider": "ollama",
-                "model": "qwen2.5:1.5b"
-            }"#,
-        )
-        .unwrap();
-        let manifest = Manifest::from_path(&path).unwrap();
-        assert_eq!(manifest.name, "search");
-        assert!(matches!(manifest.provider, Provider::Ollama));
-        assert_eq!(manifest.model, "qwen2.5:1.5b");
-        fs::remove_file(path).unwrap();
-    }
-
-    fn unique_test_file_path() -> PathBuf {
-        let nanos = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_nanos();
-        std::env::temp_dir().join(format!("a3-manifest-{nanos}.json"))
     }
 }

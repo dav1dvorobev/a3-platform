@@ -8,4 +8,4 @@ mod tools;
 pub use error::{Error, Result};
 pub use manifest::Manifest;
 pub use provider::Provider;
-pub use tools::Tools;
+pub use tools::ToolDefinition;
