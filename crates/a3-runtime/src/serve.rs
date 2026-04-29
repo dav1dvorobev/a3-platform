@@ -5,7 +5,7 @@ use http::{HeaderName, HeaderValue};
 use rig::{
     agent::Agent,
     client::{CompletionClient, ProviderClient},
-    completion::{CompletionModel, Prompt},
+    completion::CompletionModel,
     providers::{anthropic, deepseek, gemini, ollama, openai, openrouter, xai},
     tool::{
         rmcp::McpClientHandler,
@@ -26,49 +26,45 @@ use tokio::process::Command;
 type McpService = RunningService<rmcp::service::RoleClient, McpClientHandler>;
 
 ///
-pub async fn serve(manifest: Manifest) -> crate::Result<()> {
+pub async fn serve(manifest: &Manifest) -> crate::Result<()> {
     let tool_server_handle = ToolServer::new().run();
-    let _tool_services = setup_tools(manifest.tools.as_ref(), &tool_server_handle)
+    let _services = setup_tools(manifest.tools.as_ref(), &tool_server_handle)
         .await
         .inspect_err(|e| tracing::error!("failed to setup tools: {e}"))?;
     match manifest.provider {
         Provider::Anthropic => {
-            let agent = build_agent(anthropic::Client::from_env(), manifest, tool_server_handle);
+            let agent = build_agent(anthropic::Client::from_env()?, manifest, tool_server_handle);
             setup_agent(agent).await?;
         }
         Provider::DeepSeek => {
-            let agent = build_agent(deepseek::Client::from_env(), manifest, tool_server_handle);
+            let agent = build_agent(deepseek::Client::from_env()?, manifest, tool_server_handle);
             setup_agent(agent).await?;
         }
         Provider::Gemini => {
-            let agent = build_agent(gemini::Client::from_env(), manifest, tool_server_handle);
+            let agent = build_agent(gemini::Client::from_env()?, manifest, tool_server_handle);
             setup_agent(agent).await?;
         }
         Provider::Ollama => {
-            let agent = build_agent(ollama::Client::from_env(), manifest, tool_server_handle);
+            let agent = build_agent(ollama::Client::from_env()?, manifest, tool_server_handle);
             setup_agent(agent).await?;
         }
         Provider::OpenAI => {
-            let agent = build_agent(openai::Client::from_env(), manifest, tool_server_handle);
+            let agent = build_agent(openai::Client::from_env()?, manifest, tool_server_handle);
             setup_agent(agent).await?;
         }
         Provider::OpenRouter => {
-            let agent = build_agent(openrouter::Client::from_env(), manifest, tool_server_handle);
+            let agent = build_agent(
+                openrouter::Client::from_env()?,
+                manifest,
+                tool_server_handle,
+            );
             setup_agent(agent).await?;
         }
         Provider::xAI => {
-            let agent = build_agent(xai::Client::from_env(), manifest, tool_server_handle);
+            let agent = build_agent(xai::Client::from_env()?, manifest, tool_server_handle);
             setup_agent(agent).await?;
         }
     }
-    Ok(())
-}
-
-async fn setup_agent<M>(agent: Agent<M>) -> crate::Result<()>
-where
-    M: CompletionModel + 'static,
-{
-    tokio::signal::ctrl_c().await?;
     Ok(())
 }
 
@@ -85,10 +81,10 @@ async fn setup_tools(
     );
     let mut tool_services = Vec::with_capacity(tools.len());
     for (name, definition) in tools {
-        tracing::info!(tool = %name, "connecting manifest tool");
+        tracing::info!("connecting tool \"{name}\"");
         let service = connect_tool(definition, client_info.clone(), tool_server_handle.clone())
             .await
-            .inspect_err(|e| tracing::error!(tool = %name, "failed to connect tool: {e}"))?;
+            .inspect_err(|e| tracing::error!("failed to connect tool \"{name}\": {e}"))?;
         tool_services.push(service);
     }
     Ok(Some(tool_services))
@@ -142,7 +138,7 @@ fn parse_headers(
 
 fn build_agent<C>(
     client: C,
-    manifest: Manifest,
+    manifest: &Manifest,
     tool_server_handle: ToolServerHandle,
 ) -> Agent<C::CompletionModel>
 where
@@ -155,4 +151,12 @@ where
         .preamble(manifest.instruction.as_str())
         .tool_server_handle(tool_server_handle)
         .build()
+}
+
+async fn setup_agent<M>(agent: Agent<M>) -> crate::Result<()>
+where
+    M: CompletionModel + 'static,
+{
+    tokio::signal::ctrl_c().await?;
+    Ok(())
 }
