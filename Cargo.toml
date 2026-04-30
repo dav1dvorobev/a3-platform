@@ -10,5 +10,9 @@ edition = "2024"
 a3-manifest = { path = "crates/a3-manifest" }
 a3-runtime = { path = "crates/a3-runtime" }
 thiserror = "2.0.18"
+tokio = { version = "1.52.1", features = [
+    "macros",
+    "rt-multi-thread",
+    "signal",
+] }
 tracing = "0.1.44"
-tracing-subscriber = "0.3.23"
