@@ -1,0 +1,11 @@
+[package]
+name = "a3-cli"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+a3-manifest.workspace = true
+a3-runtime.workspace = true
+clap = { version = "4.6.1", features = ["derive"] }
+tokio.workspace = true
+tracing.workspace = true
