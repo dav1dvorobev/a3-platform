@@ -1,19 +1,14 @@
 {
-    "name": "search",
+    "name": "searcher",
     "provider": "openai",
-    "model": "NVIDIA-Nemotron-3-Nano-4B-8bit",
-    "description": "DuckDuckGo Searcher",
-    "instruction": "Provide a concise summary results for topic using DuckDuckGo",
+    "model": "Qwen2.5-7B-Instruct-4bit",
+    "description": "Agent that searches external sources and summarizes results",
+    "instruction": "Use available search tools. Return concise, sourced answers",
     "tools": {
         "duckduckgo": {
             "type": "stdio",
             "command": "docker",
             "args": ["run", "-i", "--rm", "mcp/duckduckgo"]
-        },
-        "time": {
-            "type": "stdio",
-            "command": "docker",
-            "args": ["run", "-i", "--rm", "mcp/time"]
         }
     }
 }
