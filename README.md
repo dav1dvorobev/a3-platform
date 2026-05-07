@@ -1,4 +1,7 @@
-# A3 Platform
+<p align="center"><strong>A3 Platform</strong> build your AI systems
+</p>
+<br>
 
-A3 (Agent Actor-based Architecture) is a platform for launching and coordinating autonomous AI agents, where each agent is treated as an independent actor with its own state, instructions, model,
-and toolset.
+Each agent is described declaratively using a manifest and executed as an isolated process-like node.
+
+> Status: early research prototype. The project focused on proving the runtime architecture for a university thesis experiment, not production-ready orchestration.
