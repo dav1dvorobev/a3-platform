@@ -1,0 +1,16 @@
+{
+    "name": "github",
+    "provider": "openai",
+    "model": "Nemotron-3-Nano-4B-RotorQuant-MLX-4bit",
+    "description": "Agent for working with GitHub repositories, issues, pull requests, commits, code, and project metadata through GitHub MCP tools.",
+    "instruction": "Use the available GitHub tools to search, inspect, and summarize repository data. Prefer direct GitHub sources over assumptions. When answering, include relevant repository names, file paths, issue or pull request numbers, commit references, and links when available. Keep responses concise, accurate, and action-oriented. If information is missing or access is limited, say so clearly instead of guessing.",
+    "tools": {
+        "github": {
+            "type": "http",
+            "url": "https://api.githubcopilot.com/mcp",
+            "headers": {
+                "Authorization": "Bearer <YOUR_GITHUB_PAT>"
+            }
+        }
+    }
+}

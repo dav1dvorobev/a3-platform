@@ -1,0 +1,14 @@
+{
+    "name": "searcher",
+    "provider": "openai",
+    "model": "Nemotron-3-Nano-4B-RotorQuant-MLX-4bit",
+    "description": "Agent that searches external sources and summarizes results",
+    "instruction": "Use available search tools. Return concise, sourced answers",
+    "tools": {
+        "duckduckgo": {
+            "type": "stdio",
+            "command": "docker",
+            "args": ["run", "-i", "--rm", "mcp/duckduckgo"]
+        }
+    }
+}
