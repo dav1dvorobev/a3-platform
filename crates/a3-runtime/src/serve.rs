@@ -79,15 +79,15 @@ async fn setup_tools(
         ClientCapabilities::default(),
         Implementation::from_build_env(),
     );
-    let mut tool_services = Vec::with_capacity(tools.len());
+    let mut services = Vec::with_capacity(tools.len());
     for (name, definition) in tools {
         tracing::info!("connecting tool \"{name}\"");
         let service = connect_tool(definition, client_info.clone(), tool_server_handle.clone())
             .await
             .inspect_err(|e| tracing::error!("failed to connect tool \"{name}\": {e}"))?;
-        tool_services.push(service);
+        services.push(service);
     }
-    Ok(Some(tool_services))
+    Ok(Some(services))
 }
 
 async fn connect_tool(
