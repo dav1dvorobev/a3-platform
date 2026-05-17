@@ -1,7 +1,11 @@
 //! Contains `Error` and corresponding `Result`.
 
 use http::header::{InvalidHeaderName, InvalidHeaderValue};
-use rig::{client::ProviderClientError, tool::rmcp::McpClientError};
+use rig::{
+    client::ProviderClientError,
+    completion::PromptError,
+    tool::{rmcp::McpClientError, server::ToolServerError},
+};
 
 /// A result with a specified [Error] type.
 pub type Result<T> = std::result::Result<T, Error>;
@@ -14,5 +18,8 @@ pub enum Error {
     InvalidHeaderName(#[from] InvalidHeaderName),
     InvalidHeaderValue(#[from] InvalidHeaderValue),
     McpClientError(#[from] McpClientError),
+    PromptError(#[from] PromptError),
     ProviderClientError(#[from] ProviderClientError),
+    ToolServerError(#[from] ToolServerError),
+    TransportError(#[from] a3_transport::Error),
 }

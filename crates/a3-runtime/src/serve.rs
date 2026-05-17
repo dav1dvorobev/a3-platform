@@ -1,11 +1,12 @@
 //!
 
 use a3_manifest::{Manifest, Provider, ToolDefinition};
+use a3_transport::Transport;
 use http::{HeaderName, HeaderValue};
 use rig::{
     agent::Agent,
     client::{CompletionClient, ProviderClient},
-    completion::CompletionModel,
+    completion::{Chat, CompletionModel},
     providers::{anthropic, deepseek, gemini, ollama, openai, openrouter, xai},
     tool::{
         rmcp::McpClientHandler,
@@ -27,44 +28,96 @@ type McpService = RunningService<rmcp::service::RoleClient, McpClientHandler>;
 
 ///
 pub async fn serve(manifest: &Manifest) -> crate::Result<()> {
+    // TODO: NATS hardcoded for the prototype. Move transport selection to manifest.
+    let transport = a3_transport::nats::Transport::connect(manifest.address.clone())
+        .await
+        .inspect_err(|e| tracing::error!("failed to connect transport: {e}"))?;
     let tool_server_handle = ToolServer::new().run();
-    let _services = setup_tools(manifest.tools.as_ref(), &tool_server_handle)
+    add_transport_tool(transport.clone(), &tool_server_handle)
+        .await
+        .inspect_err(|e| tracing::error!("failed to add transport tool: {e}"))?;
+    let services = setup_tools(manifest.tools.as_ref(), &tool_server_handle)
         .await
         .inspect_err(|e| tracing::error!("failed to setup tools: {e}"))?;
+    let default_max_turns = services.as_ref().map_or(1, |services| services.len() + 1);
     match manifest.provider {
         Provider::Anthropic => {
-            let agent = build_agent(anthropic::Client::from_env()?, manifest, tool_server_handle);
-            setup_agent(agent).await?;
+            let agent = build_agent(
+                anthropic::Client::from_env()?,
+                manifest,
+                tool_server_handle,
+                default_max_turns,
+            );
+            setup_agent(agent, transport).await?;
         }
         Provider::DeepSeek => {
-            let agent = build_agent(deepseek::Client::from_env()?, manifest, tool_server_handle);
-            setup_agent(agent).await?;
+            let agent = build_agent(
+                deepseek::Client::from_env()?,
+                manifest,
+                tool_server_handle,
+                default_max_turns,
+            );
+            setup_agent(agent, transport).await?;
         }
         Provider::Gemini => {
-            let agent = build_agent(gemini::Client::from_env()?, manifest, tool_server_handle);
-            setup_agent(agent).await?;
+            let agent = build_agent(
+                gemini::Client::from_env()?,
+                manifest,
+                tool_server_handle,
+                default_max_turns,
+            );
+            setup_agent(agent, transport).await?;
         }
         Provider::Ollama => {
-            let agent = build_agent(ollama::Client::from_env()?, manifest, tool_server_handle);
-            setup_agent(agent).await?;
+            let agent = build_agent(
+                ollama::Client::from_env()?,
+                manifest,
+                tool_server_handle,
+                default_max_turns,
+            );
+            setup_agent(agent, transport).await?;
         }
         Provider::OpenAI => {
-            let agent = build_agent(openai::Client::from_env()?, manifest, tool_server_handle);
-            setup_agent(agent).await?;
+            let agent = build_agent(
+                openai::Client::from_env()?,
+                manifest,
+                tool_server_handle,
+                default_max_turns,
+            );
+            setup_agent(agent, transport).await?;
         }
         Provider::OpenRouter => {
             let agent = build_agent(
                 openrouter::Client::from_env()?,
                 manifest,
                 tool_server_handle,
+                default_max_turns,
             );
-            setup_agent(agent).await?;
+            setup_agent(agent, transport).await?;
         }
         Provider::xAI => {
-            let agent = build_agent(xai::Client::from_env()?, manifest, tool_server_handle);
-            setup_agent(agent).await?;
+            let agent = build_agent(
+                xai::Client::from_env()?,
+                manifest,
+                tool_server_handle,
+                default_max_turns,
+            );
+            setup_agent(agent, transport).await?;
         }
     }
+    Ok(())
+}
+
+async fn add_transport_tool<T>(
+    transport: T,
+    tool_server_handle: &ToolServerHandle,
+) -> crate::Result<()>
+where
+    T: Transport + Send + Sync + 'static,
+{
+    tool_server_handle
+        .add_tool(crate::tools::Transport::new(transport))
+        .await?;
     Ok(())
 }
 
@@ -81,11 +134,11 @@ async fn setup_tools(
     );
     let mut services = Vec::with_capacity(tools.len());
     for (name, definition) in tools {
-        tracing::info!("connecting tool \"{name}\"");
         let service = connect_tool(definition, client_info.clone(), tool_server_handle.clone())
             .await
             .inspect_err(|e| tracing::error!("failed to connect tool \"{name}\": {e}"))?;
         services.push(service);
+        tracing::info!("connected tool \"{name}\"");
     }
     Ok(Some(services))
 }
@@ -140,23 +193,51 @@ fn build_agent<C>(
     client: C,
     manifest: &Manifest,
     tool_server_handle: ToolServerHandle,
+    default_max_turns: usize,
 ) -> Agent<C::CompletionModel>
 where
     C: CompletionClient,
 {
+    let preamble = format!(
+        "DESCRIPTION:\n{}\n\nINSTRUCTION:\n{}\n\nCONSTRAINTS:\n{}",
+        manifest.description.as_str(),
+        manifest.instruction.as_str(),
+        manifest.constraints.as_str()
+    );
     client
         .agent(manifest.model.as_str())
-        .name(manifest.name.as_str())
-        .description(manifest.description.as_str())
-        .preamble(manifest.instruction.as_str())
+        .preamble(preamble.as_str())
+        .context(manifest.context.as_str())
+        .default_max_turns(default_max_turns)
         .tool_server_handle(tool_server_handle)
         .build()
 }
 
-async fn setup_agent<M>(agent: Agent<M>) -> crate::Result<()>
+async fn setup_agent<M>(
+    agent: Agent<M>,
+    mut transport: impl a3_transport::Transport,
+) -> crate::Result<()>
 where
     M: CompletionModel + 'static,
 {
-    tokio::signal::ctrl_c().await?;
+    let mut history = vec![];
+    loop {
+        match transport.recv().await {
+            Ok(message) => match message {
+                Some(message) => {
+                    tracing::info!("received message: {message:?}");
+                    let _ = agent.chat(message.to_string()?, &mut history).await?;
+                }
+                None => {
+                    tracing::error!("failed to receive message");
+                    break;
+                }
+            },
+            Err(e) => {
+                tracing::error!("failed to receive message: {e}");
+                break;
+            }
+        }
+    }
     Ok(())
 }
