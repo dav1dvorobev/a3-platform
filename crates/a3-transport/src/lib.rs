@@ -6,4 +6,4 @@ pub mod nats;
 mod transport;
 
 pub use error::{Error, Result};
-pub use transport::Transport;
+pub use transport::{Receiver, Sender};

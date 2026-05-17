@@ -1,7 +1,6 @@
 //!
 
 use a3_manifest::{Manifest, Provider, ToolDefinition};
-use a3_transport::Transport;
 use http::{HeaderName, HeaderValue};
 use rig::{
     agent::Agent,
@@ -29,11 +28,11 @@ type McpService = RunningService<rmcp::service::RoleClient, McpClientHandler>;
 ///
 pub async fn serve(manifest: &Manifest) -> crate::Result<()> {
     // TODO: NATS hardcoded for the prototype. Move transport selection to manifest.
-    let transport = a3_transport::nats::Transport::connect(manifest.address.clone())
+    let (sender, receiver) = a3_transport::nats::connect(manifest.address.clone())
         .await
         .inspect_err(|e| tracing::error!("failed to connect transport: {e}"))?;
     let tool_server_handle = ToolServer::new().run();
-    add_transport_tool(transport.clone(), &tool_server_handle)
+    add_transport_tool(sender, &tool_server_handle)
         .await
         .inspect_err(|e| tracing::error!("failed to add transport tool: {e}"))?;
     let services = setup_tools(manifest.tools.as_ref(), &tool_server_handle)
@@ -48,7 +47,7 @@ pub async fn serve(manifest: &Manifest) -> crate::Result<()> {
                 tool_server_handle,
                 default_max_turns,
             );
-            setup_agent(agent, transport).await?;
+            setup_agent(agent, receiver).await?;
         }
         Provider::DeepSeek => {
             let agent = build_agent(
@@ -57,7 +56,7 @@ pub async fn serve(manifest: &Manifest) -> crate::Result<()> {
                 tool_server_handle,
                 default_max_turns,
             );
-            setup_agent(agent, transport).await?;
+            setup_agent(agent, receiver).await?;
         }
         Provider::Gemini => {
             let agent = build_agent(
@@ -66,7 +65,7 @@ pub async fn serve(manifest: &Manifest) -> crate::Result<()> {
                 tool_server_handle,
                 default_max_turns,
             );
-            setup_agent(agent, transport).await?;
+            setup_agent(agent, receiver).await?;
         }
         Provider::Ollama => {
             let agent = build_agent(
@@ -75,7 +74,7 @@ pub async fn serve(manifest: &Manifest) -> crate::Result<()> {
                 tool_server_handle,
                 default_max_turns,
             );
-            setup_agent(agent, transport).await?;
+            setup_agent(agent, receiver).await?;
         }
         Provider::OpenAI => {
             let agent = build_agent(
@@ -84,7 +83,7 @@ pub async fn serve(manifest: &Manifest) -> crate::Result<()> {
                 tool_server_handle,
                 default_max_turns,
             );
-            setup_agent(agent, transport).await?;
+            setup_agent(agent, receiver).await?;
         }
         Provider::OpenRouter => {
             let agent = build_agent(
@@ -93,7 +92,7 @@ pub async fn serve(manifest: &Manifest) -> crate::Result<()> {
                 tool_server_handle,
                 default_max_turns,
             );
-            setup_agent(agent, transport).await?;
+            setup_agent(agent, receiver).await?;
         }
         Provider::xAI => {
             let agent = build_agent(
@@ -102,21 +101,21 @@ pub async fn serve(manifest: &Manifest) -> crate::Result<()> {
                 tool_server_handle,
                 default_max_turns,
             );
-            setup_agent(agent, transport).await?;
+            setup_agent(agent, receiver).await?;
         }
     }
     Ok(())
 }
 
-async fn add_transport_tool<T>(
-    transport: T,
+async fn add_transport_tool<S>(
+    sender: S,
     tool_server_handle: &ToolServerHandle,
 ) -> crate::Result<()>
 where
-    T: Transport + Send + Sync + 'static,
+    S: a3_transport::Sender,
 {
     tool_server_handle
-        .add_tool(crate::tools::Transport::new(transport))
+        .add_tool(crate::tools::Transport::new(sender))
         .await?;
     Ok(())
 }
@@ -215,14 +214,14 @@ where
 
 async fn setup_agent<M>(
     agent: Agent<M>,
-    mut transport: impl a3_transport::Transport,
+    mut receiver: impl a3_transport::Receiver,
 ) -> crate::Result<()>
 where
     M: CompletionModel + 'static,
 {
     let mut history = vec![];
     loop {
-        match transport.recv().await {
+        match receiver.recv().await {
             Ok(message) => match message {
                 Some(message) => {
                     tracing::info!("received message: {message:?}");

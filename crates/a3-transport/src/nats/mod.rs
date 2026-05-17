@@ -1,3 +1,3 @@
 mod transport;
 
-pub use transport::Transport;
+pub use transport::{Receiver, Sender, connect};

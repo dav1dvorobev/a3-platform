@@ -4,23 +4,23 @@ use std::{error::Error, fmt};
 
 pub struct Transport<T>
 where
-    T: a3_transport::Transport,
+    T: a3_transport::Sender,
 {
-    transport: T,
+    sender: T,
 }
 
 impl<T> Transport<T>
 where
-    T: a3_transport::Transport,
+    T: a3_transport::Sender,
 {
-    pub fn new(transport: T) -> Self {
-        Self { transport }
+    pub fn new(sender: T) -> Self {
+        Self { sender }
     }
 }
 
 impl<T> Tool for Transport<T>
 where
-    T: a3_transport::Transport + Send + Sync + 'static,
+    T: a3_transport::Sender,
 {
     const NAME: &'static str = "send_message";
     type Error = SendMessageToolError;
@@ -52,7 +52,7 @@ where
     async fn call(&self, args: Self::Args) -> Result<Self::Output, Self::Error> {
         let to = address_arg(&args, "to")?;
         let body = string_arg(&args, "body")?;
-        self.transport
+        self.sender
             .send(to, body)
             .await
             .map_err(SendMessageToolError::Transport)?;
