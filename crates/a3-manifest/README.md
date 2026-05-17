@@ -1,1 +1,1 @@
-`a3-manifest`
+`A3 Manifest`
