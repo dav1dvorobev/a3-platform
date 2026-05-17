@@ -7,25 +7,9 @@ pub struct Address {
 
 impl Address {
     pub fn from_str(address: &str) -> crate::Result<Self> {
-        Ok(serde_json::from_str(address)?)
-    }
-
-    pub fn to_string(&self) -> crate::Result<String> {
-        Ok(serde_json::to_string(self)?)
-    }
-}
-
-impl<'de> serde::Deserialize<'de> for Address {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        use serde::de::Error;
-
-        let raw_address = <String as serde::Deserialize>::deserialize(deserializer)?;
-        let address: Vec<&str> = raw_address.split(&['@', '.']).collect();
+        let address: Vec<&str> = address.split(&['@', '.']).collect();
         if address.len() != 3 {
-            return Err(D::Error::custom(
+            return Err(crate::Error::AddressError(
                 "invalid address format, expect \"name@second-level-domain.top-level-domain\"",
             ));
         }
@@ -35,6 +19,23 @@ impl<'de> serde::Deserialize<'de> for Address {
             top_level_domain: address[2].to_owned(),
         })
     }
+
+    pub fn to_string(&self) -> String {
+        format!(
+            "{}@{}.{}",
+            self.name, self.second_level_domain, self.top_level_domain
+        )
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for Address {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let address = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Address::from_str(address.as_str()).map_err(serde::de::Error::custom)
+    }
 }
 
 impl serde::Serialize for Address {
@@ -42,10 +43,7 @@ impl serde::Serialize for Address {
     where
         S: serde::Serializer,
     {
-        serializer.serialize_str(&format!(
-            "{}@{}.{}",
-            self.name, self.second_level_domain, self.top_level_domain
-        ))
+        serializer.serialize_str(self.to_string().as_str())
     }
 }
 
@@ -55,7 +53,7 @@ mod tests {
 
     #[test]
     fn deserializes_address_correctly() {
-        let address = Address::from_str("\"search@email.local\"").unwrap();
+        let address = Address::from_str("search@email.local").unwrap();
         assert_eq!(address.name.as_str(), "search");
         assert_eq!(address.second_level_domain.as_str(), "email");
         assert_eq!(address.top_level_domain.as_str(), "local");
@@ -68,9 +66,6 @@ mod tests {
             second_level_domain: "email".to_string(),
             top_level_domain: "local".to_string(),
         };
-        assert_eq!(
-            address.to_string().unwrap().as_str(),
-            "\"search@email.local\""
-        );
+        assert_eq!(address.to_string().as_str(), "search@email.local");
     }
 }

@@ -67,10 +67,8 @@ mod tests {
         }"#,
         )
         .unwrap();
-        assert_eq!(
-            manifest.address.to_string().unwrap().as_str(),
-            "\"search@email.local\""
-        );
+        println!("{manifest:#?}");
+        assert_eq!(manifest.address.to_string().as_str(), "search@email.local");
         assert!(matches!(manifest.provider, Provider::OpenAI));
         assert_eq!(manifest.model, "Nemotron-3-Nano-4B-RotorQuant-MLX-4bit");
         assert_eq!(

@@ -8,6 +8,8 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub enum Error {
     #[error("missing required manifest field: {0}")]
     MissingField(&'static str),
+    #[error("address error: {0}")]
+    AddressError(&'static str),
     #[error(transparent)]
     JsonError(#[from] serde_json::Error),
     #[error(transparent)]
