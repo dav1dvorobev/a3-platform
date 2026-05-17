@@ -64,19 +64,8 @@ fn address_arg(
     args: &serde_json::Value,
     field: &'static str,
 ) -> Result<Address, SendMessageToolError> {
-    let value = args
-        .get(field)
-        .cloned()
-        .ok_or(SendMessageToolError::InvalidArgument(field))?;
-    let Some(value) = value
-        .as_str()
-        .map(str::trim)
-        .filter(|value| !value.is_empty())
-    else {
-        return Err(SendMessageToolError::InvalidArgument(field));
-    };
-    serde_json::from_value(serde_json::Value::String(value.to_owned()))
-        .map_err(SendMessageToolError::InvalidAddress)
+    let value = string_arg(args, field)?;
+    Address::from_str(value.as_str()).map_err(SendMessageToolError::InvalidAddress)
 }
 
 fn string_arg(
@@ -94,7 +83,7 @@ fn string_arg(
 #[derive(Debug)]
 pub enum SendMessageToolError {
     InvalidArgument(&'static str),
-    InvalidAddress(serde_json::Error),
+    InvalidAddress(a3_manifest::Error),
     Transport(a3_transport::Error),
 }
 
@@ -104,8 +93,8 @@ impl fmt::Display for SendMessageToolError {
             Self::InvalidArgument(field) => {
                 write!(f, "invalid or missing `{field}` argument")
             }
-            Self::InvalidAddress(error) => write!(f, "invalid address: {error}"),
-            Self::Transport(error) => write!(f, "failed to send message: {error}"),
+            Self::InvalidAddress(e) => write!(f, "invalid address: {e}"),
+            Self::Transport(e) => write!(f, "failed to send message: {e}"),
         }
     }
 }
