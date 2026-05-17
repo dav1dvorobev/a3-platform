@@ -2,9 +2,8 @@ use clap::{Parser, Subcommand};
 use std::{path::PathBuf, process::ExitCode};
 
 #[derive(Debug, Parser)]
-#[command(name = "a3-platform", bin_name = "a3-platform")]
 #[command(
-    about = "A3 (Agent Actor-based Architecture) Platform", long_about = None
+    about = "A3 (Actor-based Agent Architecture) Platform", long_about = None
 )]
 struct Cli {
     #[command(subcommand)]
@@ -19,6 +18,10 @@ enum Command {
 
 #[tokio::main]
 async fn main() -> ExitCode {
+    dotenv::dotenv().ok();
+    tracing_subscriber::fmt()
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .init();
     let cli = Cli::parse();
     match cli.command {
         Command::Run { path } => run(path).await,
@@ -33,7 +36,6 @@ async fn run(path: PathBuf) -> ExitCode {
             return ExitCode::FAILURE;
         }
     };
-
     if let Err(e) = a3_runtime::serve(&manifest).await {
         eprintln!("failed to run node: {e}");
         return ExitCode::FAILURE;
