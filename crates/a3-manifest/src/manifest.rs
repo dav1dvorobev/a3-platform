@@ -1,5 +1,3 @@
-//! Manifest type and loading helpers.
-
 use crate::{Provider, ToolDefinition};
 use std::{collections::HashMap, path::Path};
 
@@ -7,7 +5,7 @@ use std::{collections::HashMap, path::Path};
 #[derive(serde::Deserialize, Debug)]
 #[non_exhaustive]
 pub struct Manifest {
-    pub name: String,
+    pub address: String,
     pub provider: Provider,
     pub model: String,
     pub description: String,
@@ -26,8 +24,8 @@ impl Manifest {
 
     /// Validates required manifest fields.
     fn validate(&self) -> crate::Result<()> {
-        if self.name.trim().is_empty() {
-            return Err(crate::Error::MissingField("name"));
+        if self.address.trim().is_empty() {
+            return Err(crate::Error::MissingField("address"));
         }
         if self.model.trim().is_empty() {
             return Err(crate::Error::MissingField("model"));
@@ -50,37 +48,34 @@ mod tests {
     fn deserializes_manifest_correctly() {
         let manifest: Manifest = serde_json::from_str(
             r#"{
-            "name": "search",
+            "address": "searcher@domain.com",
             "provider": "openai",
-            "model": "qwen2.5:1.5b",
-            "description": "DuckDuckGo Searcher",
-            "instruction": "Provide a concise summary results for topic using DuckDuckGo",
+            "model": "Nemotron-3-Nano-4B-RotorQuant-MLX-4bit",
+            "description": "Agent that searches external sources and summarizes results",
+            "instruction": "Use available search tools. Return concise, sourced answers",
             "tools": {
                 "duckduckgo": {
                     "type": "stdio",
                     "command": "docker",
                     "args": ["run", "-i", "--rm", "mcp/duckduckgo"]
-                },
-                "time": {
-                    "type": "stdio",
-                    "command": "docker",
-                    "args": ["run", "-i", "--rm", "mcp/time"]
                 }
             }
         }"#,
         )
         .unwrap();
-        assert_eq!(manifest.name, "search");
+        assert_eq!(manifest.address, "searcher@domain.com");
         assert!(matches!(manifest.provider, Provider::OpenAI));
-        assert_eq!(manifest.model, "qwen2.5:1.5b");
-        assert_eq!(manifest.description, "DuckDuckGo Searcher");
+        assert_eq!(manifest.model, "Nemotron-3-Nano-4B-RotorQuant-MLX-4bit");
+        assert_eq!(
+            manifest.description,
+            "Agent that searches external sources and summarizes results"
+        );
         assert_eq!(
             manifest.instruction,
-            "Provide a concise summary results for topic using DuckDuckGo"
+            "Use available search tools. Return concise, sourced answers"
         );
         let tools = manifest.tools.as_ref().unwrap();
-        assert_eq!(tools.len(), 2);
+        assert_eq!(tools.len(), 1);
         assert!(tools.contains_key("duckduckgo"));
-        assert!(tools.contains_key("time"));
     }
 }

@@ -1,4 +1,6 @@
-//! Support for loading and validating manifest.
+//! A3 Manifest.
+//!
+//! This crate defines manifest type and loading helpers.
 
 mod error;
 mod manifest;
