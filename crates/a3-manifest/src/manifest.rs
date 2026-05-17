@@ -10,6 +10,8 @@ pub struct Manifest {
     pub model: String,
     pub description: String,
     pub instruction: String,
+    pub constraints: String,
+    pub context: String,
     pub tools: Option<HashMap<String, ToolDefinition>>,
 }
 
@@ -48,11 +50,13 @@ mod tests {
     fn deserializes_manifest_correctly() {
         let manifest: Manifest = serde_json::from_str(
             r#"{
-            "address": "searcher@domain.com",
+            "address": "search@email.local",
             "provider": "openai",
             "model": "Nemotron-3-Nano-4B-RotorQuant-MLX-4bit",
             "description": "Agent that searches external sources and summarizes results",
             "instruction": "Use available search tools. Return concise, sourced answers",
+            "constraints": "If information is missing or access is limited, say so clearly instead of guessing",
+            "context": "",
             "tools": {
                 "duckduckgo": {
                     "type": "stdio",
@@ -63,7 +67,7 @@ mod tests {
         }"#,
         )
         .unwrap();
-        assert_eq!(manifest.address, "searcher@domain.com");
+        assert_eq!(manifest.address, "search@email.local");
         assert!(matches!(manifest.provider, Provider::OpenAI));
         assert_eq!(manifest.model, "Nemotron-3-Nano-4B-RotorQuant-MLX-4bit");
         assert_eq!(
@@ -74,6 +78,11 @@ mod tests {
             manifest.instruction,
             "Use available search tools. Return concise, sourced answers"
         );
+        assert_eq!(
+            manifest.constraints,
+            "If information is missing or access is limited, say so clearly instead of guessing"
+        );
+        assert_eq!(manifest.context, "");
         let tools = manifest.tools.as_ref().unwrap();
         assert_eq!(tools.len(), 1);
         assert!(tools.contains_key("duckduckgo"));
