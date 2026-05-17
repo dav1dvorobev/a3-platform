@@ -1,9 +1,11 @@
 {
-    "name": "searcher",
+    "address": "search@email.local",
     "provider": "openai",
     "model": "Nemotron-3-Nano-4B-RotorQuant-MLX-4bit",
     "description": "Agent that searches external sources and summarizes results",
     "instruction": "Use available search tools. Return concise, sourced answers",
+    "constraints": "If information is missing or access is limited, say so clearly instead of guessing",
+    "context": "",
     "tools": {
         "duckduckgo": {
             "type": "stdio",
