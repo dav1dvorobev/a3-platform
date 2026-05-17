@@ -1,11 +1,11 @@
-use crate::{Provider, ToolDefinition};
+use crate::{Address, Provider, ToolDefinition};
 use std::{collections::HashMap, path::Path};
 
 /// Manifest definition.
 #[derive(serde::Deserialize, Debug)]
 #[non_exhaustive]
 pub struct Manifest {
-    pub address: String,
+    pub address: Address,
     pub provider: Provider,
     pub model: String,
     pub description: String,
@@ -26,9 +26,6 @@ impl Manifest {
 
     /// Validates required manifest fields.
     fn validate(&self) -> crate::Result<()> {
-        if self.address.trim().is_empty() {
-            return Err(crate::Error::MissingField("address"));
-        }
         if self.model.trim().is_empty() {
             return Err(crate::Error::MissingField("model"));
         }
@@ -36,6 +33,9 @@ impl Manifest {
             return Err(crate::Error::MissingField("description"));
         }
         if self.instruction.trim().is_empty() {
+            return Err(crate::Error::MissingField("instruction"));
+        }
+        if self.constraints.trim().is_empty() {
             return Err(crate::Error::MissingField("instruction"));
         }
         Ok(())
@@ -67,7 +67,10 @@ mod tests {
         }"#,
         )
         .unwrap();
-        assert_eq!(manifest.address, "search@email.local");
+        assert_eq!(
+            manifest.address.to_string().unwrap().as_str(),
+            "\"search@email.local\""
+        );
         assert!(matches!(manifest.provider, Provider::OpenAI));
         assert_eq!(manifest.model, "Nemotron-3-Nano-4B-RotorQuant-MLX-4bit");
         assert_eq!(
