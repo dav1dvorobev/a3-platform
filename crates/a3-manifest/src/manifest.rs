@@ -1,4 +1,5 @@
-use crate::{Address, Provider, ToolDefinition};
+use crate::{Provider, ToolDefinition};
+use a3_transport::message::Address;
 use std::{collections::HashMap, path::Path};
 
 /// Manifest definition.
@@ -52,10 +53,10 @@ mod tests {
             r#"{
             "address": "search@email.local",
             "provider": "openai",
-            "model": "Nemotron-3-Nano-4B-RotorQuant-MLX-4bit",
-            "description": "Agent that searches external sources and summarizes results",
-            "instruction": "Use available search tools. Return concise, sourced answers",
-            "constraints": "If information is missing or access is limited, say so clearly instead of guessing",
+            "model": "Qwen3.5-9B-OptiQ-4bit",
+            "description": "Agent that searches external sources and summarizes results.",
+            "instruction": "Use available search tools. Return concise, sourced answers.",
+            "constraints": "If information is missing or access is limited, say so clearly instead of guessing.",
             "context": "",
             "tools": {
                 "duckduckgo": {
@@ -73,15 +74,15 @@ mod tests {
         assert_eq!(manifest.model, "Nemotron-3-Nano-4B-RotorQuant-MLX-4bit");
         assert_eq!(
             manifest.description,
-            "Agent that searches external sources and summarizes results"
+            "Agent that searches external sources and summarizes results."
         );
         assert_eq!(
             manifest.instruction,
-            "Use available search tools. Return concise, sourced answers"
+            "Use available search tools. Return concise, sourced answers."
         );
         assert_eq!(
             manifest.constraints,
-            "If information is missing or access is limited, say so clearly instead of guessing"
+            "If information is missing or access is limited, say so clearly instead of guessing."
         );
         assert_eq!(manifest.context, "");
         let tools = manifest.tools.as_ref().unwrap();
