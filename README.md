@@ -2,6 +2,5 @@
 </p>
 <br>
 
-Each agent is described declaratively using a manifest and executed as an isolated process-like node.
-
-> Status: early research prototype. The project focused on proving the runtime architecture for a university thesis experiment, not production-ready orchestration.
+> [!WARNING]
+> Early research prototype. The project focused on testing the concept of architecture, not production-ready realization.
