@@ -24,10 +24,12 @@ use std::collections::HashMap;
 use tokio::process::Command;
 
 type McpService = RunningService<rmcp::service::RoleClient, McpClientHandler>;
+// Hardcoded for the prototype.
+const DEFAULT_MAX_TURNS: usize = 32;
 
 ///
 pub async fn serve(manifest: &Manifest) -> crate::Result<()> {
-    // TODO: NATS hardcoded for the prototype. Move transport selection to manifest.
+    // Hardcoded for the prototype. Move transport selection to manifest.
     let (sender, receiver) = a3_transport::nats::connect(manifest.address.clone())
         .await
         .inspect_err(|e| tracing::error!("failed to connect transport: {e}"))?;
@@ -35,72 +37,86 @@ pub async fn serve(manifest: &Manifest) -> crate::Result<()> {
     add_transport_tool(sender, &tool_server_handle)
         .await
         .inspect_err(|e| tracing::error!("failed to add transport tool: {e}"))?;
-    let services = setup_tools(manifest.tools.as_ref(), &tool_server_handle)
+    let _services = setup_tools(manifest.tools.as_ref(), &tool_server_handle)
         .await
         .inspect_err(|e| tracing::error!("failed to setup tools: {e}"))?;
-    let default_max_turns = services.as_ref().map_or(1, |services| services.len() + 1);
+    let default_max_turns = DEFAULT_MAX_TURNS;
     match manifest.provider {
         Provider::Anthropic => {
+            tracing::info!("build agent \"{}\"", manifest.address);
             let agent = build_agent(
                 anthropic::Client::from_env()?,
                 manifest,
                 tool_server_handle,
                 default_max_turns,
             );
+            tracing::info!("setup agent \"{}\"", manifest.address);
             setup_agent(agent, receiver).await?;
         }
         Provider::DeepSeek => {
+            tracing::info!("build agent \"{}\"", manifest.address);
             let agent = build_agent(
                 deepseek::Client::from_env()?,
                 manifest,
                 tool_server_handle,
                 default_max_turns,
             );
+            tracing::info!("setup agent \"{}\"", manifest.address);
             setup_agent(agent, receiver).await?;
         }
         Provider::Gemini => {
+            tracing::info!("build agent \"{}\"", manifest.address);
             let agent = build_agent(
                 gemini::Client::from_env()?,
                 manifest,
                 tool_server_handle,
                 default_max_turns,
             );
+            tracing::info!("setup agent \"{}\"", manifest.address);
             setup_agent(agent, receiver).await?;
         }
         Provider::Ollama => {
+            tracing::info!("build agent \"{}\"", manifest.address);
             let agent = build_agent(
                 ollama::Client::from_env()?,
                 manifest,
                 tool_server_handle,
                 default_max_turns,
             );
+            tracing::info!("setup agent \"{}\"", manifest.address);
             setup_agent(agent, receiver).await?;
         }
         Provider::OpenAI => {
+            tracing::info!("build agent \"{}\"", manifest.address);
             let agent = build_agent(
                 openai::Client::from_env()?,
                 manifest,
                 tool_server_handle,
                 default_max_turns,
             );
+            tracing::info!("setup agent \"{}\"", manifest.address);
             setup_agent(agent, receiver).await?;
         }
         Provider::OpenRouter => {
+            tracing::info!("build agent \"{}\"", manifest.address);
             let agent = build_agent(
                 openrouter::Client::from_env()?,
                 manifest,
                 tool_server_handle,
                 default_max_turns,
             );
+            tracing::info!("setup agent \"{}\"", manifest.address);
             setup_agent(agent, receiver).await?;
         }
         Provider::xAI => {
+            tracing::info!("build agent \"{}\"", manifest.address);
             let agent = build_agent(
                 xai::Client::from_env()?,
                 manifest,
                 tool_server_handle,
                 default_max_turns,
             );
+            tracing::info!("setup agent \"{}\"", manifest.address);
             setup_agent(agent, receiver).await?;
         }
     }
@@ -179,9 +195,9 @@ fn parse_headers(
         .iter()
         .map(|(name, value)| {
             let header_name = HeaderName::from_bytes(name.as_bytes())
-                .inspect_err(|e| tracing::error!("invalid HTTP header name `{}`: {}", name, e))?;
+                .inspect_err(|e| tracing::error!("invalid HTTP header name \"{}\": {}", name, e))?;
             let header_value = HeaderValue::from_str(&value).inspect_err(|e| {
-                tracing::error!("invalid HTTP header value for `{}`: {}", name, e)
+                tracing::error!("invalid HTTP header value for \"{}\": {}", name, e)
             })?;
             Ok((header_name, header_value))
         })
@@ -198,13 +214,15 @@ where
     C: CompletionClient,
 {
     let preamble = format!(
-        "DESCRIPTION:\n{}\n\nINSTRUCTION:\n{}\n\nCONSTRAINTS:\n{}",
+        "NAME:\n{}\n\nDESCRIPTION:\n{}\n\nINSTRUCTION:\n{}\n\nCONSTRAINTS:\n{}",
+        manifest.address.name.as_str(),
         manifest.description.as_str(),
         manifest.instruction.as_str(),
         manifest.constraints.as_str()
     );
     client
         .agent(manifest.model.as_str())
+        .name(manifest.address.name.as_str())
         .preamble(preamble.as_str())
         .context(manifest.context.as_str())
         .default_max_turns(default_max_turns)
@@ -224,11 +242,15 @@ where
         match receiver.recv().await {
             Ok(message) => match message {
                 Some(message) => {
-                    tracing::info!("received message: {message:?}");
-                    let _ = agent.chat(message.to_string()?, &mut history).await?;
+                    tracing::info!("received message: {message}");
+                    let prompt = message.to_string();
+                    if let Err(e) = agent.chat(prompt, &mut history).await {
+                        tracing::error!("failed to process message: {e}");
+                    }
+                    tracing::info!("processed message");
                 }
                 None => {
-                    tracing::error!("failed to receive message");
+                    tracing::error!("transport receiver closed");
                     break;
                 }
             },

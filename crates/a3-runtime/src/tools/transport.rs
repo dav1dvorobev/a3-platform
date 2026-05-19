@@ -1,17 +1,17 @@
-use a3_manifest::Address;
+use a3_transport::{Sender, message::Address};
 use rig::{completion::ToolDefinition, tool::Tool};
 use std::{error::Error, fmt};
 
 pub struct Transport<T>
 where
-    T: a3_transport::Sender,
+    T: Sender,
 {
     sender: T,
 }
 
 impl<T> Transport<T>
 where
-    T: a3_transport::Sender,
+    T: Sender,
 {
     pub fn new(sender: T) -> Self {
         Self { sender }
@@ -20,7 +20,7 @@ where
 
 impl<T> Tool for Transport<T>
 where
-    T: a3_transport::Sender,
+    T: Sender,
 {
     const NAME: &'static str = "send_message";
     type Error = SendMessageToolError;
@@ -83,7 +83,7 @@ fn string_arg(
 #[derive(Debug)]
 pub enum SendMessageToolError {
     InvalidArgument(&'static str),
-    InvalidAddress(a3_manifest::Error),
+    InvalidAddress(a3_transport::Error),
     Transport(a3_transport::Error),
 }
 

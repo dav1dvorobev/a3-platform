@@ -3,7 +3,6 @@
 use http::header::{InvalidHeaderName, InvalidHeaderValue};
 use rig::{
     client::ProviderClientError,
-    completion::PromptError,
     tool::{rmcp::McpClientError, server::ToolServerError},
 };
 
@@ -18,7 +17,6 @@ pub enum Error {
     InvalidHeaderName(#[from] InvalidHeaderName),
     InvalidHeaderValue(#[from] InvalidHeaderValue),
     McpClientError(#[from] McpClientError),
-    PromptError(#[from] PromptError),
     ProviderClientError(#[from] ProviderClientError),
     ToolServerError(#[from] ToolServerError),
     TransportError(#[from] a3_transport::Error),
