@@ -4,7 +4,6 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-a3-manifest.workspace = true
 async-nats = "0.48.0"
 async-trait = "0.1.89"
 serde.workspace = true
@@ -12,3 +11,8 @@ serde_json.workspace = true
 thiserror.workspace = true
 tokio = { workspace = true, features = ["sync"] }
 tokio-stream = "0.1.18"
+
+[features]
+default = ["message"]
+message = []
+nats = []

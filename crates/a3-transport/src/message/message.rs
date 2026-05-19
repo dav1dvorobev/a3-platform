@@ -1,4 +1,4 @@
-use a3_manifest::Address;
+use crate::message::Address;
 
 #[derive(Clone, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub struct Message {
@@ -7,8 +7,12 @@ pub struct Message {
     pub body: String,
 }
 
-impl Message {
-    pub fn to_string(&self) -> crate::Result<String> {
-        Ok(serde_json::to_string(self)?)
+impl std::fmt::Display for Message {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{{\"from\":\"{}\",\"to\":\"{}\",\"body\":\"{}\"}}",
+            self.from, self.to, self.body
+        )
     }
 }

@@ -1,5 +1,4 @@
-use crate::message::Message;
-use a3_manifest::Address;
+use crate::message::{Address, Message};
 use async_trait::async_trait;
 use tokio_stream::StreamExt;
 

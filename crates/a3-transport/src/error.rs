@@ -7,6 +7,8 @@ pub type Result<T> = std::result::Result<T, Error>;
 #[derive(thiserror::Error, Debug)]
 #[error(transparent)]
 pub enum Error {
+    #[error("address error: {0}")]
+    AddressError(&'static str),
     EnvironmentError(#[from] std::env::VarError),
     NatsConnectError(#[from] async_nats::ConnectError),
     NatsSubscribeError(#[from] async_nats::SubscribeError),
