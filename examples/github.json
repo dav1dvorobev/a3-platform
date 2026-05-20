@@ -1,5 +1,6 @@
 {
     "address": "github@email.local",
+    "transport": "nats",
     "provider": "openai",
     "model": "Qwen3.5-9B-OptiQ-4bit",
     "description": "Agent for working with GitHub repositories, issues, pull requests, commits, code, and project metadata through GitHub MCP tools.",

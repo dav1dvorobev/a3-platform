@@ -1,5 +1,6 @@
 {
     "address": "search@email.local",
+    "transport": "nats",
     "provider": "openai",
     "model": "Qwen3.5-9B-OptiQ-4bit",
     "description": "Agent that searches external sources and summarizes results.",

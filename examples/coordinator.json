@@ -1,5 +1,6 @@
 {
     "address": "coordinator@email.local",
+    "transport": "nats",
     "provider": "openai",
     "model": "Qwen3.5-9B-OptiQ-4bit",
     "description": "Coordinator agent that delegates search tasks to specialized agents and synthesizes final answers.",
