@@ -1,6 +1,5 @@
 use a3_transport::{Sender, message::Address};
 use rig::{completion::ToolDefinition, tool::Tool};
-use std::{error::Error, fmt};
 
 pub struct Transport<T>
 where
@@ -30,17 +29,20 @@ where
     async fn definition(&self, _prompt: String) -> ToolDefinition {
         ToolDefinition {
             name: Self::NAME.to_string(),
-            description: "Send a message to another agent.".to_string(),
+            description: "Send a message to another address.".to_string(),
             parameters: serde_json::json!({
                 "type": "object",
                 "properties": {
                     "to": {
                         "type": "string",
-                        "description": "Address of the target agent"
+                        "description": "Full recipient address. Use the FROM address to reply to the sender.
+                        Use an address from the available agents list to delegate a task.
+                        Example:\"user@email.local\"."
                     },
                     "body": {
                         "type": "string",
-                        "description": "Text payload to send to the target agent"
+                        "description": "Message text delivered to the recipient. Include the task, question,
+                        or final answer. If you need a reply, explicitly ask the recipient to send the result back."
                     }
                 },
                 "required": ["to", "body"],
@@ -55,48 +57,31 @@ where
         self.sender
             .send(to, body)
             .await
-            .map_err(SendMessageToolError::Transport)?;
-        Ok("message sent".to_string())
+            .map_err(|e| SendMessageToolError::Transport(e))?;
+        Ok("message sent successfully".to_string())
     }
 }
 
-fn address_arg(
-    args: &serde_json::Value,
-    field: &'static str,
-) -> Result<Address, SendMessageToolError> {
+fn address_arg(args: &serde_json::Value, field: &str) -> Result<Address, SendMessageToolError> {
     let value = string_arg(args, field)?;
-    Address::from_str(value.as_str()).map_err(SendMessageToolError::InvalidAddress)
+    Address::from_str(value.as_str()).map_err(|e| SendMessageToolError::InvalidAddress(e))
 }
 
-fn string_arg(
-    args: &serde_json::Value,
-    field: &'static str,
-) -> Result<String, SendMessageToolError> {
+fn string_arg(args: &serde_json::Value, field: &str) -> Result<String, SendMessageToolError> {
     args.get(field)
         .and_then(serde_json::Value::as_str)
         .map(str::trim)
         .filter(|value| !value.is_empty())
         .map(ToOwned::to_owned)
-        .ok_or(SendMessageToolError::InvalidArgument(field))
+        .ok_or(SendMessageToolError::InvalidArgument(field.to_string()))
 }
 
-#[derive(Debug)]
+#[derive(thiserror::Error, Debug)]
 pub enum SendMessageToolError {
-    InvalidArgument(&'static str),
+    #[error("invalid or missing \"{0}\" argument")]
+    InvalidArgument(String),
+    #[error("invalid address: {0}")]
     InvalidAddress(a3_transport::Error),
+    #[error("failed to send message: {0}")]
     Transport(a3_transport::Error),
 }
-
-impl fmt::Display for SendMessageToolError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::InvalidArgument(field) => {
-                write!(f, "invalid or missing `{field}` argument")
-            }
-            Self::InvalidAddress(e) => write!(f, "invalid address: {e}"),
-            Self::Transport(e) => write!(f, "failed to send message: {e}"),
-        }
-    }
-}
-
-impl Error for SendMessageToolError {}
