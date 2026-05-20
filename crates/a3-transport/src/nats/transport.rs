@@ -21,6 +21,11 @@ pub async fn connect(address: Address) -> crate::Result<(Sender, Receiver)> {
 #[async_trait]
 impl crate::Sender for Sender {
     async fn send(&self, to: Address, body: String) -> crate::Result<()> {
+        if to == self.address {
+            return Err(crate::Error::AddressError(
+                "You can not send a message to yourself",
+            ));
+        }
         let subject = subject_for_address(&to);
         let message = Message {
             from: self.address.clone(),
