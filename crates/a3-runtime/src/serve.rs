@@ -214,8 +214,7 @@ where
     C: CompletionClient,
 {
     let preamble = format!(
-        "NAME:\n{}\n\nDESCRIPTION:\n{}\n\nINSTRUCTION:\n{}\n\nCONSTRAINTS:\n{}",
-        manifest.address.name.as_str(),
+        "DESCRIPTION:\n{}\n\nINSTRUCTION:\n{}\n\nCONSTRAINTS:\n{}",
         manifest.description.as_str(),
         manifest.instruction.as_str(),
         manifest.constraints.as_str()
@@ -237,20 +236,21 @@ async fn setup_agent<M>(
 where
     M: CompletionModel + 'static,
 {
-    let mut history = vec![];
+    let mut history = HashMap::new();
     loop {
         match receiver.recv().await {
             Ok(message) => match message {
                 Some(message) => {
-                    tracing::info!("received message: {message}");
-                    let prompt = message.to_string();
-                    if let Err(e) = agent.chat(prompt, &mut history).await {
+                    tracing::info!("received message from \"{}\"", message.from);
+                    let prompt = format!("FROM:\n{}\n\nBODY:\n{}", message.from, message.body);
+                    let current_history = history.entry(message.from.to_string()).or_insert(vec![]);
+                    if let Err(e) = agent.chat(prompt, current_history).await {
                         tracing::error!("failed to process message: {e}");
                     }
                     tracing::info!("processed message");
                 }
                 None => {
-                    tracing::error!("transport receiver closed");
+                    tracing::warn!("transport receiver closed");
                     break;
                 }
             },
