@@ -15,5 +15,5 @@ rmcp = { version = "1.7.0", features = [
 ] }
 serde_json.workspace = true
 thiserror.workspace = true
-tokio = { workspace = true, features = ["signal"] }
+tokio.workspace = true
 tracing.workspace = true
