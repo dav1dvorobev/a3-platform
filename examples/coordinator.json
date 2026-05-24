@@ -2,9 +2,9 @@
     "address": "coordinator@email.local",
     "transport": "nats",
     "provider": "openai",
-    "model": "Qwen3.5-9B-OptiQ-4bit",
-    "description": "Coordinator agent that delegates search tasks to specialized agents and synthesizes final answers.",
-    "instruction": "Coordinate tasks using send_message. When a user sets a task that requires the help of another agent, send a brief request to the agent using send_message. Ask the agent to provide you with the result. Once the agent responds, summarize the result and send a final brief response to the user.",
+    "model": "Qwen3.5-4B-OptiQ-4bit",
+    "description": "Coordinator agent that delegates search tasks to specialized agents, synthesizes final answers.",
+    "instruction": "After receiving a request from a user, delegate the necessary subtasks to available agents by sending them messages. Ask agents to send back results. Don not wait agents. When you collect all received responses from agents you must send back a final response to user to him address, preserving as much detail and structured information.",
     "constraints": "If information is missing or access is limited, say so clearly instead of guessing.",
-    "context": "Available agents:\n- github@email.local: Agent for working with GitHub repositories, issues, pull requests, commits, code, and project metadata through GitHub MCP tools."
+    "context": "AVAILABLE AGENTS:\n- github@email.local: Agent for working with GitHub repositories, issues, pull requests, commits, code, and project metadata through GitHub MCP tools."
 }
