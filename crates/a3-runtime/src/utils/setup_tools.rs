@@ -58,7 +58,10 @@ async fn connect_tool(
                 command.args(args);
             }
             if let Some(env) = env {
-                command.envs(env);
+                command.envs(
+                    env.iter()
+                        .map(|(key, value)| (key.as_str(), value.as_str())),
+                );
             }
             let transport = TokioChildProcess::new(command)?;
             Ok(handler.connect(transport).await?)
