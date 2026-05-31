@@ -1,0 +1,13 @@
+[package]
+name = "client"
+version = "0.0.1"
+edition = "2024"
+
+[dependencies]
+a3-transport = { workspace = true, features = ["nats"] }
+axum = { version = "0.8.9", features = ["ws"] }
+chrono = "0.4.44"
+serde_json.workspace = true
+tokio = { workspace = true, features = ["net"] }
+tower-http = { version = "0.6.11", features = ["fs"] }
+tracing.workspace = true

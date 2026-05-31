@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Client</title>
+        <link rel="stylesheet" href="/app.css" />
+        <script
+            defer
+            src="https://cdn.jsdelivr.net/npm/dompurify@3.2.7/dist/purify.min.js"
+        ></script>
+        <script
+            defer
+            src="https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js"
+        ></script>
+        <script defer src="/app.js"></script>
+    </head>
+    <body>
+        <main class="page">
+            <section class="chat-page" id="chatPage">
+                <header class="topbar">
+                    <div class="account">
+                        <span>from</span>
+                        <strong id="currentAddress"></strong>
+                    </div>
+
+                    <label class="recipient-field">
+                        <span>to</span>
+                        <input
+                            id="recipientInput"
+                            autocomplete="off"
+                            spellcheck="false"
+                            placeholder="адрес получателя"
+                        />
+                    </label>
+                </header>
+
+                <section class="chat-main" id="chatMain">
+                    <div class="empty-state" id="emptyState">
+                        <h2>С чего начнем?</h2>
+                    </div>
+                    <section class="messages" id="messages" aria-live="polite"></section>
+                </section>
+
+                <footer class="composer-wrap">
+                    <form class="composer" id="messageForm">
+                        <textarea
+                            id="messageInput"
+                            rows="1"
+                            placeholder="Сообщение"
+                        ></textarea>
+                        <button
+                            class="send-button"
+                            id="sendButton"
+                            type="submit"
+                            aria-label="Отправить"
+                            disabled
+                        >
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M12 19V5"></path>
+                                <path d="M5 12l7-7 7 7"></path>
+                            </svg>
+                        </button>
+                    </form>
+                    <p class="hint" id="hint">Укажите адрес получателя в верхней строке.</p>
+                </footer>
+            </section>
+
+            <section class="gate" id="gate">
+                <form class="gate-panel" id="addressForm">
+                    <h1>Введите адрес пользователя</h1>
+                    <input
+                        class="gate-input"
+                        id="addressInput"
+                        autocomplete="off"
+                        spellcheck="false"
+                        placeholder="name@email.local"
+                    />
+                    <p class="gate-error" id="gateError"></p>
+                </form>
+            </section>
+        </main>
+    </body>
+</html>
