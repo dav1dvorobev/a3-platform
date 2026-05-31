@@ -3,7 +3,7 @@ use a3_transport::message::Address;
 use std::{collections::HashMap, path::Path};
 
 /// Manifest definition.
-#[derive(serde::Deserialize, Debug)]
+#[derive(serde::Deserialize)]
 #[non_exhaustive]
 pub struct Manifest {
     pub address: Address,

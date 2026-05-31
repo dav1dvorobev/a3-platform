@@ -2,7 +2,28 @@
 
 use std::collections::HashMap;
 
-#[derive(serde::Deserialize, Debug)]
+pub struct EnvValue(String);
+
+impl EnvValue {
+    pub fn as_str(&self) -> &str {
+        &self.0.as_str()
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for EnvValue {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let raw = <String as serde::Deserialize>::deserialize(deserializer)?;
+        let expanded = shellexpand::env(&raw)
+            .map_err(serde::de::Error::custom)?
+            .into_owned();
+        Ok(Self(expanded))
+    }
+}
+
+#[derive(serde::Deserialize)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum ToolDefinition {
     Http {
@@ -12,7 +33,7 @@ pub enum ToolDefinition {
     Stdio {
         command: String,
         args: Option<Vec<String>>,
-        env: Option<HashMap<String, String>>,
+        env: Option<HashMap<String, EnvValue>>,
     },
 }
 
@@ -52,12 +73,13 @@ mod tests {
                 "command": "docker",
                 "args": ["run", "-i", "--rm", "mcp/example"],
                 "env": {
-                    "ACCESS_TOKEN": "<TOKEN>"
+                    "ACCESS_TOKEN": "TOKEN"
                 }
             }"#,
         )
         .unwrap();
         match definition {
+            ToolDefinition::Http { .. } => panic!("expected stdio tool definition"),
             ToolDefinition::Stdio { command, args, env } => {
                 assert_eq!(command, "docker");
                 assert_eq!(
@@ -70,11 +92,10 @@ mod tests {
                     ]
                 );
                 assert_eq!(
-                    env.unwrap().get("ACCESS_TOKEN").map(String::as_str),
-                    Some("<TOKEN>")
+                    env.unwrap().get("ACCESS_TOKEN").unwrap().as_str(),
+                    EnvValue("TOKEN".to_string()).as_str()
                 );
             }
-            ToolDefinition::Http { .. } => panic!("expected stdio tool definition"),
         }
     }
 }

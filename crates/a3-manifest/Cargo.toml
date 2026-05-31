@@ -7,5 +7,6 @@ edition.workspace = true
 a3-transport.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+shellexpand = "3.1.2"
 thiserror.workspace = true
 tracing.workspace = true
