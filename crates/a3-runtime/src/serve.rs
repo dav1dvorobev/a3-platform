@@ -1,5 +1,3 @@
-//!
-
 use crate::{
     tools::Transport,
     utils::{build_agent, setup_agent, setup_tools},
@@ -14,7 +12,7 @@ use rig::{
 // Hardcoded for the prototype.
 const DEFAULT_MAX_TURNS: usize = 32;
 
-///
+/// Serve the agent with the supplied manifest.
 pub async fn serve(manifest: &Manifest) -> crate::Result<()> {
     // Hardcoded for the prototype. Use transport from manifest.
     let (sender, receiver) = a3_transport::nats::connect(manifest.address.clone())

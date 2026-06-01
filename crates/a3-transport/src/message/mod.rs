@@ -1,5 +1,23 @@
 mod address;
-mod message;
 
 pub use address::Address;
-pub use message::Message;
+
+#[derive(Clone, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub struct Message {
+    pub from: Address,
+    pub to: Address,
+    pub body: String,
+}
+
+impl std::fmt::Display for Message {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "<MESSAGE>\n\
+            <FROM>{}</FROM>\n\
+            <BODY>{}</BODY>\n\
+            </MESSAGE>",
+            self.from, self.body
+        )
+    }
+}

@@ -77,7 +77,7 @@ fn parse_headers(
         .map(|(name, value)| {
             let header_name = HeaderName::from_bytes(name.as_bytes())
                 .inspect_err(|e| tracing::error!("invalid HTTP header name \"{}\": {}", name, e))?;
-            let header_value = HeaderValue::from_str(&value).inspect_err(|e| {
+            let header_value = HeaderValue::from_str(value).inspect_err(|e| {
                 tracing::error!("invalid HTTP header value for \"{}\": {}", name, e)
             })?;
             Ok((header_name, header_value))

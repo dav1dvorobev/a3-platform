@@ -1,5 +1,6 @@
 use a3_transport::{Sender, message::Address};
 use rig::{completion::ToolDefinition, tool::Tool};
+use std::str::FromStr;
 
 pub struct Transport<T>
 where
@@ -57,14 +58,14 @@ where
         self.sender
             .send(to, body)
             .await
-            .map_err(|e| SendMessageToolError::Transport(e))?;
+            .map_err(SendMessageToolError::Transport)?;
         Ok("message sent successfully".to_string())
     }
 }
 
 fn address_arg(args: &serde_json::Value, field: &str) -> Result<Address, SendMessageToolError> {
     let value = string_arg(args, field)?;
-    Address::from_str(value.as_str()).map_err(|e| SendMessageToolError::InvalidAddress(e))
+    Address::from_str(value.as_str()).map_err(SendMessageToolError::InvalidAddress)
 }
 
 fn string_arg(args: &serde_json::Value, field: &str) -> Result<String, SendMessageToolError> {

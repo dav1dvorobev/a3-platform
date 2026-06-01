@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Address {
     pub name: String,
@@ -5,9 +7,10 @@ pub struct Address {
     pub top_level_domain: String,
 }
 
-impl Address {
-    pub fn from_str(address: &str) -> crate::Result<Self> {
-        let address: Vec<&str> = address.split(&['@', '.']).collect();
+impl FromStr for Address {
+    type Err = crate::Error;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let address: Vec<&str> = s.split(&['@', '.']).collect();
         if address.len() != 3 {
             return Err(crate::Error::AddressError(
                 "invalid address format, expect \"name@second-level-domain.top-level-domain\"",
