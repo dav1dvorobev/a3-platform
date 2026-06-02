@@ -9,21 +9,23 @@ permissions:
   contents: write
 
 jobs:
+  test:
+    name: Test
+    uses: ./.github/workflows/ci.yaml
+
   build:
-    name: Build ${{ matrix.target }} on ${{ matrix.os }}
+    name: Build ${{ matrix.target }}
+    needs: test
     strategy:
       matrix:
         include:
-          - os: macOS (Apple Silicon)
-            runner: macos-latest
+          - runner: macos-latest
             target: aarch64-apple-darwin
             artifact: a3-cli-macos-aarch64
-          - os: Linux
-            runner: ubuntu-latest
+          - runner: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             artifact: a3-cli-linux-x86_64
-          - os: Windows
-            runner: windows-latest
+          - runner: windows-latest
             target: x86_64-pc-windows-msvc
             artifact: a3-cli-windows-x86_64.exe
     runs-on: ${{ matrix.runner }}
@@ -32,16 +34,16 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           target: ${{ matrix.target }}
-      - run: cargo build -r -p a3-cli
+      - run: cargo build -r -p a3-cli --target ${{ matrix.target }}
       - name: prepare artifact
         shell: bash
         run: |
-          mkdir dist
           if [[ "${{ runner.os }}" == "Windows" ]]; then
-            cp target/${{ matrix.target }}/release/a3-cli.exe dist/${{ matrix.artifact }}
+            cp target/${{ matrix.target }}/release/a3-cli.exe ${{ matrix.artifact }}
           else
-            cp target/${{ matrix.target }}/release/a3-cli dist/${{ matrix.artifact }}
+            cp target/${{ matrix.target }}/release/a3-cli ${{ matrix.artifact }}
           fi
       - uses: softprops/action-gh-release@v3
         with:
-          files: dist/*
+          prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') }}
+          files: ${{ matrix.artifact }}
