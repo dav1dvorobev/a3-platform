@@ -1,0 +1,14 @@
+services:
+  a3-platform-client:
+    build:
+      context: .
+      dockerfile: client/Dockerfile
+    image: a3-platform-client
+    container_name: a3-platform-client
+    environment:
+      CLIENT_HOST: 0.0.0.0
+      CLIENT_PORT: ${CLIENT_PORT:-3001}
+      NATS_URL: ${NATS_URL:-nats://host.docker.internal:4222}
+    ports:
+      - "${CLIENT_PORT:-3001}:${CLIENT_PORT:-3000}"
+    restart: unless-stopped

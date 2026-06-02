@@ -1,5 +1,6 @@
 [workspace]
-members = ["crates/*"]
+members = ["client", "crates/*"]
+default-members = ["crates/a3-cli"]
 resolver = "3"
 
 [workspace.package]
@@ -11,7 +12,7 @@ a3-manifest = { path = "crates/a3-manifest" }
 a3-runtime = { path = "crates/a3-runtime" }
 a3-transport = { path = "crates/a3-transport" }
 serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.149"
+serde_json = "1.0.150"
 thiserror = "2.0.18"
 tokio = { version = "1.52.3", features = ["macros", "rt-multi-thread"] }
 tracing = "0.1.44"
