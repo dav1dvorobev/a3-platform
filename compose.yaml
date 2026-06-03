@@ -8,7 +8,9 @@ services:
     environment:
       CLIENT_HOST: 0.0.0.0
       CLIENT_PORT: ${CLIENT_PORT:-3001}
-      NATS_URL: ${NATS_URL:-nats://host.docker.internal:4222}
+      NATS_URL: nats://host.docker.internal:4222
     ports:
-      - "${CLIENT_PORT:-3001}:${CLIENT_PORT:-3000}"
+      - "${CLIENT_PORT:-3001}:${CLIENT_PORT:-3001}"
+    volumes:
+      - ./client/static:/app/client/static:ro
     restart: unless-stopped

@@ -57,11 +57,11 @@ Run each agent in a separate terminal.
 
 Start the web client with Docker Compose:
 ```shell
-docker compose up --build --detach
+docker compose up -d
 ```
 Open:
 ```shell
-http://localhost:3000
+http://localhost:3001
 ```
 
 ## License
