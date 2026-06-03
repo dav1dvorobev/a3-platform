@@ -87,8 +87,12 @@ function connect(nextAddress) {
     }
 
     socket = new WebSocket(url);
+    const currentSocket = socket;
 
     socket.addEventListener("open", () => {
+        if (socket !== currentSocket) {
+            return;
+        }
         address = nextAddress;
         socket.send(nextAddress);
         currentAddress.textContent = nextAddress;
@@ -102,24 +106,33 @@ function connect(nextAddress) {
     });
 
     socket.addEventListener("message", (event) => {
+        if (socket !== currentSocket) {
+            return;
+        }
         handleServerMessage(event.data);
     });
 
     socket.addEventListener("close", () => {
-        if (connecting && !connected) {
-            gateError.textContent = "WebSocket закрылся до готовности сервера.";
-            connecting = false;
-            addressInput.disabled = false;
+        if (socket !== currentSocket) {
+            return;
         }
+        const wasConnected = connected;
+        connecting = false;
         connected = false;
+        addressInput.disabled = false;
+        if (wasConnected) {
+            gate.hidden = false;
+            gate.style.display = "";
+            gateError.textContent = "WebSocket закрыт.";
+        } else {
+            gateError.textContent = "WebSocket не подключен.";
+        }
         syncSendButton();
     });
 
     socket.addEventListener("error", () => {
-        if (connected) {
-            appendSystemMessage(`Не удалось открыть WebSocket: ${url}`);
-        } else {
-            gateError.textContent = `Не удалось открыть WebSocket: ${url}`;
+        if (socket !== currentSocket || connected) {
+            return;
         }
         connecting = false;
         addressInput.disabled = false;
@@ -309,7 +322,7 @@ function resizeComposer() {
 function syncSendButton() {
     const hasRecipient = recipientInput.value.trim().length > 0;
     const hasBody = messageInput.value.trim().length > 0;
-    sendButton.disabled = !hasBody;
+    sendButton.disabled = !connected || !hasBody;
     hint.classList.toggle("is-hidden", hasRecipient);
 }
 
